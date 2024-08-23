@@ -1,8 +1,11 @@
 compile.*
 start_ssh_agent.sh
+*.swp
 sourcemod/bin/*
 sourcemod/extensions/*
 sourcemod/data/*
+sourcemod/scripting/Makefile
+sourcemod/scripting/spcomp
 sourcemod/gamedata/core.games/*
 sourcemod/gamedata/sdkhooks.games/*
 sourcemod/gamedata/sdktools.games/*
