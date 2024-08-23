@@ -3,8 +3,6 @@
 #endif
 #define _mgestats_common_included
 
-#define PL_VERSION "0.9.9"
-
 #define MIN_MATCH_LENGTH 60
 #define MAX_UPDATE_ERRORS 5
 #define UPDATE_RETRY_SECONDS 10.0

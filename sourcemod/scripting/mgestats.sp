@@ -40,6 +40,8 @@
 
 int ClientToPlayerID[MAX_PLAYERS + 1] = {-1, ...};
 
+#define PL_VERSION "0.9.9"
+
 public Plugin myinfo =
 {
     name = "MGE Stats",
