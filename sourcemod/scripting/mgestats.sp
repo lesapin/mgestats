@@ -227,30 +227,39 @@ Action WeaponsClear_Command(int client, int args)
 
 void MatchEnd(int matchIdx)
 {
+    int TimeStart, TimeStop, client1, client2;
+    
     if (matchIdx < 0)
     {
         return;
     }
 
-    // these clients might not be valid if they left from a match
-    // by disconnecting so do not use these for any SM functions
-    int client1 = Matches[matchIdx].PlayerClient[0];
-    int client2 = Matches[matchIdx].PlayerClient[1];
-
-    // When match data is being processed and sent to the database,
-    // the players should no longer be associated with this match.
-    if (matchIdx == MatchIndex[client1])
+    if (Matches[matchIdx].TimeStart > 0) 
     {
-        MatchIndex[client1] = -1;
-    }
+        TimeStart = Matches[matchIdx].TimeStart;
+        TimeStop = GetTime();
 
-    if (matchIdx == MatchIndex[client2])
+        // these clients might not be valid if they left from a match
+        // by disconnecting so do not use these for any SM functions
+        client1 = Matches[matchIdx].PlayerClient[0];
+        client2 = Matches[matchIdx].PlayerClient[1];
+
+        // When match data is being processed and sent to the database,
+        // the players should no longer be associated with this match.
+        if (matchIdx == MatchIndex[client1])
+        {
+            MatchIndex[client1] = -1;
+        }
+        if (matchIdx == MatchIndex[client2])
+        {
+            MatchIndex[client2] = -1;
+        }
+    }
+    else 
     {
-        MatchIndex[client2] = -1;
+        LogError("Match struct TimeStart was malformed");
+        return;
     }
-
-    int TimeStart = Matches[matchIdx].TimeStart;
-    int TimeStop = GetTime();
 
     if (TimeStop - TimeStart > MIN_MATCH_LENGTH)
     {
