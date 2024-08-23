@@ -69,11 +69,11 @@ public void OnPluginStart()
 
 public void OnClientPostAdminCheck(int client)
 {
-    // Player sessions start with no active matches.
-    MatchIndex[client] = -1;
-
     SDKHook(client, SDKHook_WeaponSwitch, WeaponSwitch_Hook);
     SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage_Hook);
+
+    // Player sessions start with no active matches.
+    MatchIndex[client] = -1;
 
     char name[32], esc_name[2*32+1]; // allow escaping every character
     char auth[STEAMID_LEN];
@@ -86,12 +86,12 @@ public void OnClientPostAdminCheck(int client)
     {
         FormatEx
         (
-            query, sizeof(query)                    , 
-            "INSERT INTO players(steam_id, player_id, name)         \
-                VALUES ('%s', DEFAULT, '%s')                \
-                ON CONFLICT (steam_id) DO UPDATE            \
-                SET name = EXCLUDED.name                    \
-                RETURNING player_id"                ,
+            query, sizeof(query)                            , 
+            "INSERT INTO players(steam_id, player_id, name)     \
+                VALUES ('%s', DEFAULT, '%s')                    \
+                ON CONFLICT (steam_id) DO UPDATE                \
+                SET name = EXCLUDED.name                        \
+                RETURNING player_id"                        ,
             auth, esc_name
         );
 
@@ -105,13 +105,13 @@ public void OnClientPostAdminCheck(int client)
 
 public void OnClientDisconnect(int client)
 {
+    SDKUnhook(client, SDKHook_WeaponSwitch, WeaponSwitch_Hook);
+    SDKUnhook(client, SDKHook_OnTakeDamage, OnTakeDamage_Hook);
+
     if (MatchIndex[client] >= 0)
     {
         MatchEnd(MatchIndex[client]);
     }
-
-    SDKUnhook(client, SDKHook_WeaponSwitch, WeaponSwitch_Hook);
-    SDKUnhook(client, SDKHook_OnTakeDamage, OnTakeDamage_Hook);
 }
 
 /*  
@@ -226,12 +226,13 @@ void MatchEnd(int matchIdx)
         return;
     }
 
+    // these clients might not be valid if they left from a match
+    // by disconnecting so do not use these for any SM functions
     int client1 = Matches[matchIdx].PlayerClient[0];
     int client2 = Matches[matchIdx].PlayerClient[1];
 
     // When match data is being processed and sent to the database,
     // the players should no longer be associated with this match.
-
     if (matchIdx == MatchIndex[client1])
     {
         MatchIndex[client1] = -1;
@@ -295,7 +296,6 @@ void MatchEnd(int matchIdx)
 Action MatchEnd_Timer(Handle timer, any data)
 {
     MatchEnd(data);
-
     return Plugin_Continue;
 }
 
