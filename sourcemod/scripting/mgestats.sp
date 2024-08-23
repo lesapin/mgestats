@@ -231,12 +231,12 @@ void MatchEnd(int matchIdx)
     // When match data is being processed and sent to the database,
     // the players should no longer be associated with this match.
 
-    if (matchIdx == MatchIndex[Matches[matchIdx].PlayerClient[0]])
+    if (matchIdx == MatchIndex[client1])
     {
         MatchIndex[client1] = -1;
     }
 
-    if (matchIdx == MatchIndex[Matches[matchIdx].PlayerClient[1]])
+    if (matchIdx == MatchIndex[client2])
     {
         MatchIndex[client2] = -1;
     }
@@ -250,6 +250,18 @@ void MatchEnd(int matchIdx)
         LogMessage("MatchEnd %d", matchIdx);
 #endif
         DataPack pack = new DataPack();
+        char match_query[256];
+
+        FormatEx
+        (
+            match_query, sizeof(match_query), 
+            "INSERT INTO matches (match_id, start, stop)    \
+                VALUES (DEFAULT, to_timestamp(%d), to_timestamp(%d)) \
+                RETURNING match_id",
+            TimeStart, TimeStop
+        );
+
+        hDatabase.Query(T_InsertMatch, match_query, pack);
 
         pack.WriteCell(matchIdx); 
 
@@ -272,19 +284,6 @@ void MatchEnd(int matchIdx)
             pack.WriteCell(Loadout[client2].Special[i]);
             pack.WriteFloat(Loadout[client2].Damage[i]);
         }
-                
-        char match_query[256];
-
-        FormatEx
-        (
-            match_query, sizeof(match_query), 
-            "INSERT INTO matches (match_id, start, stop)    \
-                VALUES (DEFAULT, to_timestamp(%d), to_timestamp(%d)) \
-                RETURNING match_id",
-            TimeStart, TimeStop
-        );
-
-        hDatabase.Query(T_InsertMatch, match_query, pack);
     }
     else
     {
@@ -305,6 +304,9 @@ void T_InsertMatch(Database db, DBResultSet result, const char[] err, any data)
     pack.Reset();
 
     int matchIdx = pack.ReadCell();
+#if defined DEBUG
+    LogMessage("T_InsertMatch matchIdx: %d", matchIdx);
+#endif
 
     if (db == null || result == null || err[0] != '\0')
     {
@@ -326,8 +328,8 @@ void T_InsertMatch(Database db, DBResultSet result, const char[] err, any data)
     else if (result.FetchRow())
     {
         int match_id = result.FetchInt(0);
-        float damage;
         int itemDefIdx, hits, shots, special;
+        float damage;
 
         char participant_values[64];
         char participant_query[256] = 
@@ -345,8 +347,8 @@ void T_InsertMatch(Database db, DBResultSet result, const char[] err, any data)
         {
             int client = Matches[matchIdx].PlayerClient[i];
             int player_id = ClientToPlayerID[client];
-            char class_id = GetClassId(Matches[matchIdx].Class[i]);
             int score = Matches[matchIdx].Score[i];
+            char class_id = GetClassId(Matches[matchIdx].Class[i]);
             
             FormatEx
             (
