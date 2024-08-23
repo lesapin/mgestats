@@ -65,6 +65,8 @@ public void OnPluginStart()
     RegConsoleCmd("weapons", Weapons_Command);
     RegConsoleCmd("clearweapons", WeaponsClear_Command);
 #endif
+
+    //TODO: on plugin reload, query all connected players for player_id
 }
 
 public void OnClientPostAdminCheck(int client)
@@ -170,6 +172,10 @@ Action Event_PlayerDeath(Event ev, const char[] name, bool dontBroadcast)
  */
 Action Event_PlayerTeam(Event ev, const char[] name, bool dontBroadcast)
 {
+    //TODO: changing teams might be causing players to time out
+    // ex: when joining the server, unassigned->spectator
+    // or when changing arenas with !add or !remove
+
     int client = GetClientOfUserId(ev.GetInt("userid"));
 
     if (MatchIndex[client] >= 0)
