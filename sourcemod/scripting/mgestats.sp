@@ -65,12 +65,20 @@ public void OnPluginStart()
 #endif
 }
 
-public void OnClientAuthorized(int client, const char[] auth)
+public void OnClientPostAdminCheck(int client)
 {
+    // Player sessions start with no active matches.
+    MatchIndex[client] = -1;
+
+    SDKHook(client, SDKHook_WeaponSwitch, WeaponSwitch_Hook);
+    SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage_Hook);
+
     char name[32], esc_name[2*32+1]; // allow escaping every character
+    char auth[STEAMID_LEN];
     char query[256];
 
     GetClientName(client, name, sizeof(name));
+    GetClientAuthId(client, AuthId_Steam2, auth, sizeof(auth));
     
     if (SQL_EscapeString(hDatabase, name, esc_name, sizeof(esc_name)))
     {
@@ -91,15 +99,6 @@ public void OnClientAuthorized(int client, const char[] auth)
     {
         LogError("SQL_EscapeString failed for %s", name);
     }
-}
-
-public void OnClientPostAdminCheck(int client)
-{
-    // Player sessions start with no active matches.
-    MatchIndex[client] = -1;
-
-    SDKHook(client, SDKHook_WeaponSwitch, WeaponSwitch_Hook);
-    SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage_Hook);
 }
 
 public void OnClientDisconnect(int client)
