@@ -1,0 +1,59 @@
+"Games"
+{
+    "tf"
+    {
+        "Offsets"
+        {
+            // ../shared/basecombatweapon_shared.h
+            "CBaseCombatWeapon::GetSlot"
+            {
+                "linux"     "339"
+            }
+        }
+        "Signatures"
+        {
+            // ../server/tf/tf_player.h
+            "CTFPlayer::GiveNamedItem"
+            {
+                "library"   "server"
+                "linux"     "@_ZN9CTFPlayer13GiveNamedItemEPKciPK13CEconItemViewb"
+            }
+            // ../server/tf/tf_player.h
+            "CTFPlayer::NoteWeaponFired"
+            {
+                "library"   "server"
+                "linux"     "@_ZN9CTFPlayer15NoteWeaponFiredEv"
+            }
+            // ../shared/tf/weapon_base_gun.h
+            "CTFWeaponBaseGun::FireProjectile"
+            {
+                "library"   "server"
+                "linux"     "@_ZN16CTFWeaponBaseGun14FireProjectileEP9CTFPlayer"
+            }
+            // ../server/tf/tf_player.h
+            "CTFPlayer::Weapon_Switch"
+            {
+                "library"   "server"
+                "linux"     "@_ZN9CTFPlayer13Weapon_SwitchEP17CBaseCombatWeaponi"
+            }
+            // ../shared/econ/econ_item_view.h
+            "CEconItemView::GetAnimationSlot"
+            {
+                "library"   "server"
+                "linux"     "@_ZNK13CEconItemView16GetAnimationSlotEv"
+            }
+            // ../shared/econ/econ_item_view.h
+            "CEconItemView::GetItemDefIndex"
+            {
+                "library"   "server"
+                "linux"     "@_ZNK13CEconItemView15GetItemDefIndexEv"
+            }
+            // ../server/tf/tf_player.h
+            "CTFPlayer::OnTakeDamage"
+            {
+                "library"   "server"
+                "linux"     "@_ZN9CTFPlayer12OnTakeDamageERK15CTakeDamageInfo"
+            }
+        }
+    }
+}
