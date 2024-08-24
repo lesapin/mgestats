@@ -40,7 +40,7 @@
 
 int ClientToPlayerID[MAX_PLAYERS + 1] = {-1, ...};
 
-#define PL_VERSION "0.9.9"
+#define PL_VERSION "1.0.1"
 
 public Plugin myinfo =
 {
@@ -73,9 +73,6 @@ public void OnClientPostAdminCheck(int client)
 {
     SDKHook(client, SDKHook_WeaponSwitch, WeaponSwitch_Hook);
     SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage_Hook);
-
-    // Player sessions start with no active matches.
-    MatchIndex[client] = -1;
 
     char name[32], esc_name[2*32+1]; // allow escaping every character
     char auth[STEAMID_LEN];
@@ -114,6 +111,9 @@ public void OnClientDisconnect(int client)
     {
         MatchEnd(MatchIndex[client]);
     }
+
+    // Player sessions start with no active matches.
+    MatchIndex[client] = -1;
 }
 
 /*  
@@ -134,7 +134,7 @@ Action Event_PlayerDeath(Event ev, const char[] name, bool dontBroadcast)
         if 
         (
             (MatchIndex[killed] != MatchIndex[killer]) ||
-                (MatchIndex[killed] == -1 && MatchIndex[killer] == -1)
+            (MatchIndex[killed] == -1 && MatchIndex[killer] == -1)
         )
         {
             MatchIndex[killed] = -2;
@@ -172,12 +172,11 @@ Action Event_PlayerDeath(Event ev, const char[] name, bool dontBroadcast)
  */
 Action Event_PlayerTeam(Event ev, const char[] name, bool dontBroadcast)
 {
+    int client = GetClientOfUserId(ev.GetInt("userid"));
+
     //TODO: changing teams might be causing players to time out
     // ex: when joining the server, unassigned->spectator
     // or when changing arenas with !add or !remove
-
-    int client = GetClientOfUserId(ev.GetInt("userid"));
-
     if (MatchIndex[client] >= 0)
     {
         MatchEnd(MatchIndex[client]);
@@ -239,7 +238,7 @@ void MatchEnd(int matchIdx)
         TimeStart = Matches[matchIdx].TimeStart;
         TimeStop = GetTime();
 
-        // these clients might not be valid if they left from a match
+        // These clients might not be valid if they left from a match
         // by disconnecting so do not use these for any SM functions
         client1 = Matches[matchIdx].PlayerClient[0];
         client2 = Matches[matchIdx].PlayerClient[1];
