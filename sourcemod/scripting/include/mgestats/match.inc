@@ -68,14 +68,7 @@ void MatchStart(int player1, int player2)
 #endif
 	if (!MatchStart_Loop(player1, player2))
 	{
-		/*
-		DataPack pack;
-		CreateDataTimer(MATCH_RETRY_SECONDS, MatchStart_Timer, pack, TIMER_REPEAT);
-
-		pack.WriteCell(GetClientUserId(player1));
-		pack.WriteCell(GetClientUserId(player2));
-		*/
-		LogError("MatchStart no open Match structs");
+		LogMessage("MatchStart no open Match structs");
 	}
 }
 
@@ -90,7 +83,7 @@ bool MatchStart_Loop(int player1, int player2)
 #if defined DEBUG
 			LogMessage("MatchStart_Loop success %d", idx);
 #endif
-			if (IsClientAuthorized(player1) && IsClientAuthorized(player2))
+			if (IsClientInGame(player1) && IsClientInGame(player2))
 			{
 				GetClientAuthId(player1, AuthId_Steam2, Matches[idx].PlayerID1, STEAMID_LEN);
 				GetClientAuthId(player2, AuthId_Steam2, Matches[idx].PlayerID2, STEAMID_LEN);
@@ -109,14 +102,15 @@ bool MatchStart_Loop(int player1, int player2)
 			
 				return true;
 			}
-
+#if defined DEBUG
+            LogMessage("MatchStart_Loop player not in game");
+#endif
 			return false;
 		}
 
 		idx++;
 	}
 
-	idx = 0;
 	return false;
 }
 

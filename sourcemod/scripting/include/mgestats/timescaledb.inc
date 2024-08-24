@@ -138,6 +138,9 @@ public void DB_Connected(Database db, const char[] err, any data)
              *  Check if a player with 'id' exists and update their Steam name. If the
              *  player is not found, then insert a new record with given parameters and
              *  return the player_id given by the SERIAL attribute.
+             *
+             *  This way, SERIAL does not get incremented in cases where an insert-first
+             *  approach would fail. 
              */
             query, sizeof(query),
             "CREATE FUNCTION UPSERT_PLAYER(id TEXT, new_name TEXT) RETURNS SETOF SMALLINT AS $$    \

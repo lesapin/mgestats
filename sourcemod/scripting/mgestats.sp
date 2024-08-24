@@ -40,7 +40,7 @@
 
 int ClientToPlayerID[MAX_PLAYERS + 1] = {-1, ...};
 
-#define PL_VERSION "1.0.1"
+#define PL_VERSION "1.0.3"
 
 public Plugin myinfo =
 {
@@ -69,6 +69,19 @@ public void OnPluginStart()
     //TODO: on plugin reload, query all connected players for player_id
 }
 
+public void OnMapStart()
+{
+    for (int i = 0; i < MAX_MATCHES; i++) 
+    {
+        MatchUnlock(i); 
+    }
+
+    for (int i = 0; i <= MAX_PLAYERS; i++) 
+    {
+        MatchIndex[i] = -1;
+    }
+}
+
 public void OnClientPostAdminCheck(int client)
 {
     char name[32], esc_name[2*32+1]; // escaping every character
@@ -80,6 +93,7 @@ public void OnClientPostAdminCheck(int client)
     
     if (SQL_EscapeString(hDatabase, name, esc_name, sizeof(esc_name)))
     {
+        // UPSERT_PLAYER is defined in timescaledb.inc
         FormatEx(query, sizeof(query), "SELECT UPSERT_PLAYER('%s', '%s')", auth, esc_name);
         hDatabase.Query(T_PlayerAuth, query, client);
     }
@@ -107,6 +121,7 @@ public void OnClientDisconnect(int client)
 
     // Player sessions start with no active matches.
     MatchIndex[client] = -1;
+    ClientToPlayerID[client] = -1;
 }
 
 /*  
@@ -122,7 +137,11 @@ Action Event_PlayerDeath(Event ev, const char[] name, bool dontBroadcast)
     int killed = GetClientOfUserId(ev.GetInt("userid"));
     int killer = GetClientOfUserId(ev.GetInt("attacker"));
 
-    if (killer != 0 && killer != killed)
+    if 
+    (
+        (killer != 0 && killer != killed) && 
+        (ClientToPlayerID[killer] != -1 && ClientToPlayerID[killed] != -1)
+    )
     {
         if 
         (
@@ -264,9 +283,9 @@ void MatchEnd(int matchIdx)
         FormatEx
         (
             match_query, sizeof(match_query), 
-            "INSERT INTO matches (match_id, start, stop)    \
-                VALUES (DEFAULT, to_timestamp(%d), to_timestamp(%d)) \
-                RETURNING match_id",
+            "INSERT INTO matches (match_id, start, stop)         \
+            VALUES (DEFAULT, to_timestamp(%d), to_timestamp(%d)) \
+            RETURNING match_id",
             TimeStart, TimeStop
         );
 
