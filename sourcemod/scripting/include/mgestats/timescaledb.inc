@@ -143,7 +143,7 @@ public void DB_Connected(Database db, const char[] err, any data)
              *  approach would fail. 
              */
             query, sizeof(query),
-            "CREATE FUNCTION UPSERT_PLAYER(id TEXT, new_name TEXT) RETURNS SETOF SMALLINT AS $$    \
+            "CREATE OR REPLACE FUNCTION UPSERT_PLAYER(id TEXT, new_name TEXT) RETURNS SETOF SMALLINT AS $$    \
             BEGIN                                                                           \
                 RETURN QUERY UPDATE players SET name = new_name WHERE steam_id = id RETURNING player_id; \
                 IF NOT FOUND THEN                                                           \
