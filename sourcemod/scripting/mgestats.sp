@@ -71,35 +71,28 @@ public void OnPluginStart()
 
 public void OnClientPostAdminCheck(int client)
 {
-    SDKHook(client, SDKHook_WeaponSwitch, WeaponSwitch_Hook);
-    SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage_Hook);
-
-    char name[32], esc_name[2*32+1]; // allow escaping every character
+    char name[32], esc_name[2*32+1]; // escaping every character
     char auth[STEAMID_LEN];
     char query[256];
 
-    GetClientName(client, name, sizeof(name));
     GetClientAuthId(client, AuthId_Steam2, auth, sizeof(auth));
+    GetClientName(client, name, sizeof(name));
     
     if (SQL_EscapeString(hDatabase, name, esc_name, sizeof(esc_name)))
     {
-        FormatEx
-        (
-            query, sizeof(query)                            , 
-            "INSERT INTO players(steam_id, player_id, name)     \
-                VALUES ('%s', DEFAULT, '%s')                    \
-                ON CONFLICT (steam_id) DO UPDATE                \
-                SET name = EXCLUDED.name                        \
-                RETURNING player_id"                        ,
-            auth, esc_name
-        );
-
+        FormatEx(query, sizeof(query), "SELECT UPSERT_PLAYER('%s', '%s')", auth, esc_name);
         hDatabase.Query(T_PlayerAuth, query, client);
     }
     else
     {
         LogError("SQL_EscapeString failed for %s", name);
     }
+}
+
+public void OnClientPutInServer(int client)
+{
+    SDKHook(client, SDKHook_WeaponSwitch, WeaponSwitch_Hook);
+    SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage_Hook);
 }
 
 public void OnClientDisconnect(int client)

@@ -54,14 +54,15 @@ public void DB_Connected(Database db, const char[] err, any data)
 
         FormatEx
         (
-            /*  Players table holds information about each player. Read
+            /*  
+             *  Players table holds information about each player. Read
              *  often but updated and inserted to seldomly. Additionally, 
              *  player_id is a quick reference to a particular steam_id.
              */
             query, sizeof(query),
             "CREATE TABLE IF NOT EXISTS players(                    \
                 steam_id    CHAR(20)                            ,   \
-                player_id   SERIAL                              ,   \
+                player_id   SMALLSERIAL                         ,   \
                 name        CHAR(32)    NOT NULL                ,   \
                 CONSTRAINT  unique_id   UNIQUE(player_id)       ,   \
                 CONSTRAINT  player_pk   PRIMARY KEY(steam_id)       \
@@ -72,7 +73,8 @@ public void DB_Connected(Database db, const char[] err, any data)
         
         FormatEx
         (
-            /*  The main table, matches, will list all unique matches that
+            /* 
+             *  The main table, matches, will list all unique matches that
              *  have taken place and the time interval in which they 
              *  happened. Multiple reads and inserts but no updates.
              */
@@ -90,14 +92,15 @@ public void DB_Connected(Database db, const char[] err, any data)
         
         FormatEx
         (
-            /*  match_participants Stores information about the players
+            /*  
+             *  match_participants Stores information about the players
              *  of a match with match_id. Create one row in the table 
              *  for each player_id who played in the match. No updates.
              */
             query, sizeof(query),
             "CREATE TABLE IF NOT EXISTS match_participants(                     \
                 match_id    INTEGER     REFERENCES matches(match_id)        ,   \
-                player_id   INTEGER     REFERENCES players(player_id)       ,   \
+                player_id   SMALLINT    REFERENCES players(player_id)       ,   \
                 class_id    CHAR        NOT NULL                            ,   \
                 score       SMALLINT    NOT NULL                            ,   \
                 CONSTRAINT  participant_pk  PRIMARY KEY(match_id,player_id)     \
@@ -110,20 +113,44 @@ public void DB_Connected(Database db, const char[] err, any data)
 
         FormatEx
         (
-            /*  Weapon index can be stored as a SMALLINT, since 1 < idx < 30759.
+            /*  
+             *  Weapon index can be stored as a SMALLINT, since 1 < idx < 30759.
              *  Hits, special and shots are small enough to store with SMALLINT.
              *  A lot of inserts, but fewer reads and no updates.
              */
             query, sizeof(query),
             "CREATE TABLE IF NOT EXISTS weapons(                            \
                 match_id    INTEGER     REFERENCES matches(match_id)    ,   \
-                player_id   INTEGER     REFERENCES players(player_id)   ,   \
+                player_id   SMALLINT    REFERENCES players(player_id)   ,   \
                 weapon_id   SMALLINT    NOT NULL                        ,   \
                 shots       SMALLINT                                    ,   \
                 hits        SMALLINT                                    ,   \
                 damage      INTEGER                                     ,   \
                 special     SMALLINT                                        \
             )"  
+        );
+
+        db.Query(T_ErrorCheck, query);
+
+        FormatEx
+        (
+            /*  
+             *  Check if a player with 'id' exists and update their Steam name. If the
+             *  player is not found, then insert a new record with given parameters and
+             *  return the player_id given by the SERIAL attribute.
+             */
+            query, sizeof(query),
+            "CREATE FUNCTION UPSERT_PLAYER(id TEXT, new_name TEXT) RETURNS SETOF SMALLINT AS $$    \
+            BEGIN                                                                           \
+                RETURN QUERY UPDATE players SET name = new_name WHERE steam_id = id RETURNING player_id; \
+                IF NOT FOUND THEN                                                           \
+                    RETURN QUERY INSERT INTO players(steam_id, player_id, name)                          \
+                    VALUES (id, DEFAULT, new_name)                                          \
+                    RETURNING player_id;                                                    \
+                END IF;                                                                     \
+                RETURN;                                                                     \
+            END;                                                                            \
+            $$ LANGUAGE plpgsql;"  
         );
 
         db.Query(T_ErrorCheck, query);
