@@ -147,8 +147,8 @@ Action Event_PlayerDeath(Event ev, const char[] name, bool dontBroadcast)
     {
         if 
         (
-            (MatchIndex[killed] != MatchIndex[killer]) ||
-            (MatchIndex[killed] == -1 && MatchIndex[killer] == -1)
+            (MatchIndex[killed] == -1 && MatchIndex[killer] == -1) ||
+            (MatchIndex[killed] != MatchIndex[killer]) // redundant?
         )
         {
             MatchIndex[killed] = -2;
@@ -291,14 +291,12 @@ void MatchEnd(int matchIdx)
             TimeStart, TimeStop
         );
 
-        hDatabase.Query(T_InsertMatch, match_query, pack);
-
         pack.WriteCell(matchIdx); 
 
         // store weapon stats in case they get reset before
         // sourcemod has time to process them in the db query
          
-        pack.WriteCell(client1);
+        pack.WriteCell(ClientToPlayerID[client1]);
         for (int i = 0; i < MAX_WEAPONS_TRACKED; i++) 
         {
             pack.WriteCell(Loadout[client1].ItemDefIndex[i]);
@@ -308,7 +306,7 @@ void MatchEnd(int matchIdx)
             pack.WriteFloat(Loadout[client1].Damage[i]);
         }
 
-        pack.WriteCell(client2);
+        pack.WriteCell(ClientToPlayerID[client2]);
         for (int i = 0; i < MAX_WEAPONS_TRACKED; i++) 
         {
             pack.WriteCell(Loadout[client2].ItemDefIndex[i]);
@@ -317,6 +315,8 @@ void MatchEnd(int matchIdx)
             pack.WriteCell(Loadout[client2].Special[i]);
             pack.WriteFloat(Loadout[client2].Damage[i]);
         }
+
+        hDatabase.Query(T_InsertMatch, match_query, pack);
     }
     else
     {
