@@ -73,7 +73,7 @@ public void OnMapStart()
 {
     for (int i = 0; i < MAX_MATCHES; i++) 
     {
-        MatchUnlock(i); 
+        MatchEnd(i); 
     }
 
     for (int i = 0; i <= MAX_PLAYERS; i++) 
@@ -242,7 +242,7 @@ void MatchEnd(int matchIdx)
 {
     int TimeStart, TimeStop, client1, client2;
     
-    if (matchIdx < 0)
+    if (matchIdx < 0 || !Matches[matchIdx].IsLocked)
     {
         return;
     }

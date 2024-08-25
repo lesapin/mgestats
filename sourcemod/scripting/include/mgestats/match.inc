@@ -36,7 +36,7 @@
  */
 enum struct MatchStats
 {
-	bool IsLocked;
+	bool IsLocked; // defaults to false
 	
 	char PlayerID1[STEAMID_LEN];
 	char PlayerID2[STEAMID_LEN];
