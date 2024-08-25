@@ -121,6 +121,8 @@ public void OnClientDisconnect(int client)
 
     // Player sessions start with no active matches.
     MatchIndex[client] = -1;
+
+    //TODO: Race condition in T_InsertMatch
     ClientToPlayerID[client] = -1;
 }
 
@@ -296,6 +298,7 @@ void MatchEnd(int matchIdx)
         // store weapon stats in case they get reset before
         // sourcemod has time to process them in the db query
          
+        pack.WriteCell(client1);
         for (int i = 0; i < MAX_WEAPONS_TRACKED; i++) 
         {
             pack.WriteCell(Loadout[client1].ItemDefIndex[i]);
@@ -304,6 +307,8 @@ void MatchEnd(int matchIdx)
             pack.WriteCell(Loadout[client1].Special[i]);
             pack.WriteFloat(Loadout[client1].Damage[i]);
         }
+
+        pack.WriteCell(client2);
         for (int i = 0; i < MAX_WEAPONS_TRACKED; i++) 
         {
             pack.WriteCell(Loadout[client2].ItemDefIndex[i]);
@@ -373,7 +378,7 @@ void T_InsertMatch(Database db, DBResultSet result, const char[] err, any data)
         for (int i = 0; i <= 1; i++)
         {
             int client = Matches[matchIdx].PlayerClient[i];
-            int player_id = ClientToPlayerID[client];
+            int player_id = pack.ReadCell();//ClientToPlayerID[client];
             int score = Matches[matchIdx].Score[i];
             char class_id = GetClassId(Matches[matchIdx].Class[i]);
             
